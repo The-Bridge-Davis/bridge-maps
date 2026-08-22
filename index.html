@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bridge Maps</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; width: 100%; }
+        #map { height: 100vh; width: 100vw; }
+        #zoom-out-btn {
+            display: none;
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 1000;
+            padding: 10px 18px;
+            background: #fff;
+            border: 2px solid rgba(0,0,0,0.2);
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+        #zoom-out-btn:hover { background: #f4f4f4; }
+        .marker-tooltip {
+            padding: 0;
+            min-width: 220px;
+        }
+        .marker-tooltip .tooltip-content {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            gap: 10px;
+        }
+        .marker-tooltip .tooltip-content img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+        .marker-tooltip .tooltip-content .name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .marker-tooltip .prayer {
+            padding: 8px 10px;
+            border-top: 1px solid #eee;
+            font-size: 12px;
+            color: #555;
+            font-style: italic;
+        }
+        .marker-tooltip-wrapper .leaflet-tooltip-content-wrapper {
+            padding: 0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .marker-tooltip-wrapper {
+            padding: 0;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <button id="zoom-out-btn">🌍 World View</button>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        delete L.Icon.Default.prototype._getIconUrl;
+        L.Icon.Default.mergeOptions({
+            iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+            iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+            shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png'
+        });
+
+        const map = L.map('map').setView([20, 0], 2);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        const zoomOutBtn = document.getElementById('zoom-out-btn');
+
+        const markers = [
+            { lat: 48.8566, lng: 2.3522, label: "Paris", name: "Marie Dupont", photo: "https://i.pravatar.cc/60?img=1", prayer: "Pray for strength during a difficult season at work." },
+            { lat: -33.8688, lng: 151.2093, label: "Sydney", name: "James Carter", photo: "https://i.pravatar.cc/60?img=3", prayer: "Pray for healing after a recent surgery." },
+            { lat: 35.6762, lng: 139.6503, label: "Tokyo", name: "Yuki Tanaka", photo: "https://i.pravatar.cc/60?img=5", prayer: "Pray for guidance in a new ministry opportunity." },
+            { lat: -22.9068, lng: -43.1729, label: "Rio de Janeiro", name: "Ana Silva", photo: "https://i.pravatar.cc/60?img=9", prayer: "Pray for provision for her family during financial hardship." }
+        ];
+
+        markers.forEach(m => {
+            const tooltipHtml = `
+                <div class="marker-tooltip">
+                    <div class="tooltip-content">
+                        <img src="${m.photo}" alt="${m.name}" />
+                        <span class="name">${m.name}</span>
+                    </div>
+                    <div class="prayer">${m.prayer}</div>
+                </div>
+            `;
+            L.marker([m.lat, m.lng]).addTo(map)
+                .bindTooltip(tooltipHtml, { direction: 'top', offset: [0, -10], className: 'marker-tooltip-wrapper' })
+                .on('click', () => {
+                    map.flyTo([m.lat, m.lng], 6, { duration: 1.5 });
+                    zoomOutBtn.style.display = 'block';
+                });
+        });
+
+        zoomOutBtn.addEventListener('click', () => {
+            map.flyTo([20, 0], 2, { duration: 1.5 });
+            zoomOutBtn.style.display = 'none';
+        });
+    </script>
+</body>
+</html>
