@@ -1,0 +1,326 @@
+/* Futura Book ships with the project. It is a single 400-weight face, so
+   nothing here asks for bold -- hierarchy comes from size, spacing and colour,
+   and font-synthesis is off so the browser never fakes a heavier cut.
+   The -web files are the sanitised build; see scripts/build-font.py. */
+@font-face {
+  font-family: "Futura Book";
+  src:
+    url("../fonts/Futura-Book-web.woff2") format("woff2"),
+    url("../fonts/Futura-Book-web.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --sea: #D2E4DD;
+  --land: #F4F1EA;
+  --panel-bg: #FBFAF7;
+  --ink: #22312F;
+  --ink-soft: #5C6B68;
+  --accent: #D2E4DD;
+  --marker: #2E4347;
+  --panel-width: 400px;
+  --radius: 14px;
+  --shadow: 0 10px 40px rgba(34, 49, 47, 0.18);
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --sans: "Futura Book", Futura, "Century Gothic", "Avenir Next", Avenir,
+    "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  font-family: var(--sans);
+  font-weight: 400;
+  font-synthesis: none;
+  color: var(--ink);
+}
+
+/* --------------------------------------------------------------------- map */
+
+#map {
+  height: 100vh;
+  width: 100vw;
+  /* There is no tile layer, so this is the sea. */
+  background: var(--sea);
+  outline: none;
+}
+
+.leaflet-container { background: var(--sea); font-family: var(--sans); }
+
+.leaflet-control-attribution {
+  background: rgba(251, 250, 247, 0.7);
+  color: var(--ink-soft);
+  font-size: 10px;
+}
+.leaflet-control-attribution a { color: var(--ink-soft); }
+
+.leaflet-control-zoom { border: none !important; box-shadow: var(--shadow); }
+.leaflet-control-zoom a {
+  background: var(--panel-bg);
+  color: var(--ink);
+  border-bottom-color: rgba(34, 49, 47, 0.1);
+}
+.leaflet-control-zoom a:hover { background: #fff; }
+
+/* ----------------------------------------------------------------- markers */
+
+.extra-marker { cursor: pointer; }
+
+.marker-label.leaflet-tooltip {
+  padding: 3px 14px;
+  border: none;
+  border-radius: 999px;
+  background: var(--panel-bg);
+  box-shadow: 0 2px 10px rgba(34, 49, 47, 0.2);
+  color: var(--ink);
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+/* No pointer: the label reads as floating text, not a callout. */
+.marker-label.leaflet-tooltip::before { display: none; }
+
+/* ----------------------------------------------------------------- welcome */
+
+.welcome {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  z-index: 1000;
+  width: min(560px, calc(100vw - 32px));
+  padding: 26px 44px 24px;
+  border-radius: 20px;
+  text-align: center;
+  background: var(--panel-bg);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+  transform: translateX(-50%);
+  animation: welcome-in 0.5s ease both;
+}
+.welcome[hidden] { display: none; }
+
+.welcome__title {
+  font-size: 25px;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  margin-bottom: 8px;
+  /* Futura Book has no heavier cut, so the extra weight is a hairline stroke
+     on the glyphs rather than a synthesised bold. */
+  -webkit-text-stroke: 0.6px currentColor;
+}
+.welcome__text {
+  font-size: 16px;
+  line-height: 1.65;
+  letter-spacing: 0.01em;
+  color: var(--ink-soft);
+}
+
+.welcome__close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.welcome__close:hover { background: var(--accent); color: var(--ink); }
+.welcome__close svg { width: 18px; height: 18px; }
+
+@keyframes welcome-in {
+  from { opacity: 0; transform: translate(-50%, -12px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* ------------------------------------------------------------ world button */
+
+.world-button {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  z-index: 1000;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 18px 11px 14px;
+  border: none;
+  border-radius: 999px;
+  background: var(--panel-bg);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+}
+.world-button:hover { background: #fff; }
+.world-button svg { width: 19px; height: 19px; }
+
+/* ------------------------------------------------------------------- panel */
+
+.panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 1100;
+  width: var(--panel-width);
+  max-width: 100vw;
+  height: 100vh;
+  background: var(--panel-bg);
+  box-shadow: -12px 0 40px rgba(34, 49, 47, 0.16);
+  visibility: hidden;
+  transform: translateX(100%);
+  /* Stay laid out while closed -- only the transform moves -- so the slide has a
+     starting point without depending on a rAF to flip `display`. */
+  transition: transform 0.35s ease, visibility 0s linear 0.35s;
+}
+.panel.is-open {
+  visibility: visible;
+  transform: translateX(0);
+  transition: transform 0.35s ease, visibility 0s;
+}
+
+.panel__close {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.panel__close:hover { background: var(--accent); color: var(--ink); }
+.panel__close:focus-visible,
+.welcome__close:focus-visible,
+.world-button:focus-visible,
+.extra-marker:focus-visible {
+  outline: 2px solid var(--marker);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+.panel__close svg { width: 34px; height: 34px; }
+
+.panel__body {
+  height: 100%;
+  /* Top padding clears the close button in the corner. */
+  padding: 92px 32px 48px;
+  overflow-y: auto;
+}
+
+.panel__headline {
+  font-family: var(--serif);
+  font-weight: 400;
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+}
+.headline__lead {
+  display: block;
+  font-size: 44px;
+  color: var(--ink);
+}
+.headline__subject {
+  display: block;
+  font-family: var(--sans);
+  font-size: 25px;
+  line-height: 1.3;
+  letter-spacing: 0.01em;
+  margin-top: 10px;
+  color: var(--ink);
+}
+.headline__in { color: var(--ink-soft); }
+.headline__place { color: var(--ink-soft); }
+
+.panel__photo {
+  margin: 28px 0 24px;
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--accent);
+}
+/* Any size or shape of image becomes a centred square crop. */
+.panel__photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.photo-placeholder {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  background:
+    repeating-linear-gradient(
+      45deg,
+      rgba(46, 67, 71, 0.05) 0 10px,
+      transparent 10px 20px
+    ),
+    var(--accent);
+  color: var(--marker);
+  font-family: var(--serif);
+  font-size: 56px;
+  letter-spacing: 0.04em;
+}
+
+.panel__label {
+  font-size: 14px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 8px;
+}
+.panel__description {
+  font-family: var(--sans);
+  font-size: 17px;
+  line-height: 1.7;
+  letter-spacing: 0.01em;
+  color: var(--ink);
+}
+
+@media (max-width: 720px) {
+  :root { --panel-width: 100vw; }
+  .welcome { top: 12px; padding: 20px 36px 18px; }
+  .welcome__title { font-size: 20px; }
+  .welcome__text { font-size: 15px; }
+  .panel {
+    height: 72vh;
+    top: auto;
+    bottom: 0;
+    border-radius: var(--radius) var(--radius) 0 0;
+    transform: translateY(100%);
+  }
+  .panel.is-open { transform: translateY(0); }
+  .panel__close { top: 12px; left: 12px; width: 48px; height: 48px; }
+  .panel__close svg { width: 28px; height: 28px; }
+  .panel__body { padding: 76px 24px 40px; }
+  .headline__lead { font-size: 34px; }
+  .headline__subject { font-size: 21px; }
+}
+
+/* Everything here is decoration; honour the OS setting that asks for less of it. */
+@media (prefers-reduced-motion: reduce) {
+  .panel,
+  .panel.is-open { transition: none; }
+  .welcome { animation: none; }
+}
