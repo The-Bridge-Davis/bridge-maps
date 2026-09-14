@@ -1,5 +1,10 @@
 // Colours, zoom levels and the land file. Everything tunable lives here.
 
+export const API = {
+  url: "https://script.google.com/macros/s/AKfycbyDP-q8tGkHY9nMPgJ-JzYbYjrrP2jeCR8mZ1xQcAx1Ybbtc-wVzEMXlSr9so-7T-IMJg/exec",
+  table: "profiles",
+};
+
 export const PALETTE = {
   sea: "#D2E4DD",
   land: "#F4F1EA",

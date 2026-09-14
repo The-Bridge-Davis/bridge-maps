@@ -2,7 +2,7 @@ import * as L from "leaflet";
 import { ChipCircleBorder2, Icon as ExtraIcon } from "leaflet-extra-markers";
 
 import { MAP, MARKER, PALETTE } from "./config.js";
-import { MARKERS } from "./data.js";
+import { loadProfiles } from "./data.js";
 
 const panel = document.getElementById("panel");
 const panelHeadline = document.getElementById("panel-headline");
@@ -12,6 +12,9 @@ const closeButton = document.getElementById("panel-close");
 const worldButton = document.getElementById("world-view-btn");
 const welcome = document.getElementById("welcome");
 const welcomeClose = document.getElementById("welcome-close");
+const mapStatus = document.getElementById("map-status");
+const mapStatusMessage = document.getElementById("map-status-message");
+const mapRetry = document.getElementById("map-retry");
 
 const WORLD_BOUNDS = L.latLngBounds(MAP.worldBounds);
 
@@ -78,12 +81,13 @@ const labelOptions = {
 // overlap collapse into one pin carrying a headcount; from focusZoom upwards
 // every marker stands on its own so you can pan between them.
 const pins = L.layerGroup().addTo(map);
+let markers = [];
 
 function groupMarkers(zoom) {
-  if (zoom >= MAP.focusZoom) return MARKERS.map((entry) => [entry]);
+  if (zoom >= MAP.focusZoom) return markers.map((entry) => [entry]);
 
   const groups = [];
-  for (const entry of MARKERS) {
+  for (const entry of markers) {
     const point = map.project([entry.lat, entry.lng], zoom);
     const near = groups.find(
       (group) => group.point.distanceTo(point) < MAP.clusterRadius,
@@ -142,7 +146,28 @@ function addCluster(members) {
 }
 
 map.on("zoomend", drawPins);
-drawPins();
+
+async function refreshProfiles() {
+  setMapStatus("Loading profiles...");
+
+  try {
+    markers = await loadProfiles();
+    drawnGroups = "";
+    drawPins();
+    setMapStatus(markers.length === 0 ? "No profiles are available yet." : null);
+  } catch (error) {
+    console.error("Could not load profiles", error);
+    setMapStatus("Could not load profiles.", { showRetry: true });
+  }
+}
+
+function setMapStatus(message, { showRetry = false } = {}) {
+  mapStatus.hidden = !message;
+  mapStatusMessage.textContent = message || "";
+  mapRetry.hidden = !showRetry;
+}
+
+refreshProfiles();
 
 /* ----------------------------------------------------- focus / world view --- */
 
@@ -187,16 +212,12 @@ function panelWidth() {
 /* ----------------------------------------------------------------- panel --- */
 
 function openPanel(entry) {
-  const place = [entry.city, entry.country].filter(Boolean).join(", ");
-
   panelHeadline.innerHTML = `
     <span class="headline__lead">Pray for</span>
-    <span class="headline__subject">${escapeHtml(entry.name)}<span class="headline__in"> in </span>${escapeHtml(place)}</span>
+    <span class="headline__subject">${escapeHtml(entry.name)}<span class="headline__in"> in </span>${escapeHtml(entry.location)}</span>
   `;
-  panelPhoto.innerHTML = entry.image
-    ? `<img src="${imageUrl(entry.image)}" alt="${escapeHtml(entry.name)}" referrerpolicy="no-referrer" />`
-    : `<div class="photo-placeholder" aria-hidden="true"><span>${escapeHtml(initials(entry.name))}</span></div>`;
-  panelDescription.textContent = entry.description ?? entry.prayer ?? "";
+  renderPhoto(entry);
+  renderPrayerWriteUp(entry.prayerWriteUp);
 
   panel.classList.add("is-open");
   panel.inert = false;
@@ -211,6 +232,7 @@ function closePanel() {
 
 closeButton.addEventListener("click", showWorldView);
 worldButton.addEventListener("click", showWorldView);
+mapRetry.addEventListener("click", refreshProfiles);
 welcomeClose.addEventListener("click", () => {
   welcome.hidden = true;
 });
@@ -225,10 +247,94 @@ document.addEventListener("keydown", (event) => {
 // resizes it on the way; the file has to be shared as "anyone with the link".
 // Anything that is not a Drive link is passed through untouched.
 function imageUrl(url) {
-  const id = url.match(/drive\.google\.com\/(?:file\/d\/|.*[?&]id=)([\w-]+)/)?.[1];
-  return id
-    ? `https://drive.google.com/thumbnail?id=${id}&sz=w${MAP.imageWidth}`
-    : url;
+  if (!url) return null;
+
+  try {
+    const parsed = new URL(url, window.location.href);
+    if (!["http:", "https:"].includes(parsed.protocol)) return null;
+
+    const id = parsed.href.match(
+      /drive\.google\.com\/(?:file\/d\/|.*[?&]id=)([\w-]+)/,
+    )?.[1];
+    return id
+      ? `https://drive.google.com/thumbnail?id=${id}&sz=w${MAP.imageWidth}`
+      : parsed.href;
+  } catch {
+    return null;
+  }
+}
+
+function renderPhoto(entry) {
+  panelPhoto.replaceChildren();
+  const source = imageUrl(entry.image);
+
+  if (source) {
+    const photo = document.createElement("img");
+    photo.src = source;
+    photo.alt = entry.name;
+    photo.referrerPolicy = "no-referrer";
+    photo.addEventListener(
+      "error",
+      () => renderPhotoPlaceholder(entry.name),
+      { once: true },
+    );
+    panelPhoto.append(photo);
+    return;
+  }
+
+  renderPhotoPlaceholder(entry.name);
+}
+
+function renderPhotoPlaceholder(name) {
+  panelPhoto.replaceChildren();
+  const placeholder = document.createElement("div");
+  const letters = document.createElement("span");
+  placeholder.className = "photo-placeholder";
+  placeholder.setAttribute("aria-hidden", "true");
+  letters.textContent = initials(name);
+  placeholder.append(letters);
+  panelPhoto.append(placeholder);
+}
+
+function renderPrayerWriteUp(value) {
+  panelDescription.replaceChildren();
+  const lines = String(value || "").split(/\r?\n/);
+  const headingIndex = lines.findIndex((line) =>
+    /^prayer requests?:\s*$/i.test(line.trim()),
+  );
+  const descriptionLines =
+    headingIndex === -1 ? lines : lines.slice(0, headingIndex);
+  const requestLines =
+    headingIndex === -1
+      ? []
+      : lines
+          .slice(headingIndex + 1)
+          .map((line) => line.trim().replace(/^[-*]\s*/, ""))
+          .filter(Boolean);
+  const description = descriptionLines.join("\n").trim();
+
+  if (description) {
+    const paragraph = document.createElement("p");
+    paragraph.className = "panel__connection";
+    paragraph.textContent = description;
+    panelDescription.append(paragraph);
+  }
+
+  if (requestLines.length > 0) {
+    const label = document.createElement("p");
+    const list = document.createElement("ul");
+    label.className = "panel__label";
+    label.textContent = "Prayer needs";
+    list.className = "panel__prayer-list";
+
+    requestLines.forEach((request) => {
+      const item = document.createElement("li");
+      item.textContent = request;
+      list.append(item);
+    });
+
+    panelDescription.append(label, list);
+  }
 }
 
 function initials(name) {

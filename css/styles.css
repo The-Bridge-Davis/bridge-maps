@@ -143,6 +143,37 @@ html, body {
   to { opacity: 1; transform: translate(-50%, 0); }
 }
 
+/* --------------------------------------------------------------- map status */
+
+.map-status {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: calc(100vw - 32px);
+  padding: 10px 12px 10px 16px;
+  border-radius: 8px;
+  background: var(--panel-bg);
+  color: var(--ink);
+  font-size: 14px;
+  box-shadow: var(--shadow);
+  transform: translateX(-50%);
+}
+.map-status[hidden] { display: none; }
+.map-status__retry {
+  padding: 7px 12px;
+  border: 1px solid rgba(34, 49, 47, 0.25);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+.map-status__retry:hover { background: var(--accent); }
+
 /* ------------------------------------------------------------ world button */
 
 .world-button {
@@ -297,12 +328,25 @@ html, body {
   letter-spacing: 0.01em;
   color: var(--ink);
 }
+.panel__connection {
+  white-space: pre-line;
+}
+.panel__description .panel__label {
+  margin-top: 24px;
+}
+.panel__prayer-list {
+  padding-left: 22px;
+}
+.panel__prayer-list li + li {
+  margin-top: 8px;
+}
 
 @media (max-width: 720px) {
   :root { --panel-width: 100vw; }
   .welcome { top: 12px; padding: 20px 36px 18px; }
   .welcome__title { font-size: 20px; }
   .welcome__text { font-size: 15px; }
+  .map-status { bottom: 84px; }
   .panel {
     height: 72vh;
     top: auto;

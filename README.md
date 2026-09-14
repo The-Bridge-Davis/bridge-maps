@@ -21,8 +21,8 @@ the same thing. In production just upload the folder to any static host.
 | --- | --- |
 | `index.html` | Markup, plus the import map pointing Leaflet at unpkg |
 | `css/styles.css` | All styling; palette and fonts in `:root` |
-| `js/config.js` | Colours, zoom levels, which land file to draw |
-| `js/data.js` | The markers data frame |
+| `js/config.js` | API endpoint, colours, zoom levels, which land file to draw |
+| `js/data.js` | Loads and validates profiles from the spreadsheet API |
 | `js/app.js` | Map, markers, focus view, side panel |
 | `data/world-*.geojson` | Land polygons |
 | `fonts/` | Futura Book, plus the sanitised web build |
@@ -121,13 +121,30 @@ off; hierarchy comes from size, letter-spacing and colour.
 
 ## Data
 
-`name`, `city` and `country` are required on every row in `js/data.js`. The
-panel heading reads them directly -- there is no geocoding step.
+Profiles load from the Apps Script endpoint configured in `js/config.js`. The
+Google Sheet's `Profiles` tab uses this header row:
 
-`image` takes a Google Drive share link or any direct image URL, including a
-local path like `images/marie dupont.png`. A Drive share link points at Drive's
-viewer page rather than the file, so `imageUrl()` in `js/app.js` rewrites it to
-Drive's thumbnail endpoint, which serves the real image resized to
-`MAP.imageWidth` (800px, enough for the 400px panel on a 2x display). The file
-must be shared as "anyone with the link". Whatever the source, the image is
-shown as a centred square crop via `object-fit: cover`.
+```text
+id,name,location,lat,lng,photo_url,prayer_write_up
+```
+
+`id`, `name`, `location`, `lat`, `lng`, and `prayer_write_up` are required.
+Use a unique ID and city-level coordinates for each profile; there is no
+geocoding step in the browser.
+
+`photo_url` is optional and accepts a Google Drive share link or another
+HTTP(S) image URL. Drive files must be shared as "anyone with the link". The
+backend converts common Drive links to thumbnail URLs, and the frontend shows
+the image as a centred square crop.
+
+The combined `prayer_write_up` cell should use this structure:
+
+```text
+A short description of the person's Bridge connection.
+
+Prayer requests:
+- First request
+- Second request
+```
+
+The frontend renders the description as text and the requests as a bullet list.

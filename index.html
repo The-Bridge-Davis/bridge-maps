@@ -33,6 +33,11 @@
         </button>
     </div>
 
+    <div id="map-status" class="map-status" role="status" aria-live="polite">
+        <span id="map-status-message">Loading profiles...</span>
+        <button id="map-retry" class="map-status__retry" type="button" hidden>Retry</button>
+    </div>
+
     <button id="world-view-btn" class="world-button" type="button">
         <!-- globe -->
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
@@ -57,8 +62,7 @@
         <div class="panel__body">
             <h1 id="panel-headline" class="panel__headline"></h1>
             <div id="panel-photo" class="panel__photo"></div>
-            <p class="panel__label">Prayer needs</p>
-            <p id="panel-description" class="panel__description"></p>
+            <div id="panel-description" class="panel__description"></div>
         </div>
     </aside>
 
