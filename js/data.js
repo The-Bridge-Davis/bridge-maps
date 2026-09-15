@@ -25,7 +25,8 @@ function normalizeProfile(row, index) {
   const id = normalizeText(row.id);
   const name = normalizeText(row.name);
   const location = normalizeText(row.location);
-  const prayerWriteUp = normalizeText(row.prayer_write_up);
+  const about = normalizeText(row.about);
+  const prayerRequests = normalizeText(row.prayer_requests);
   const lat = Number(row.lat);
   const lng = Number(row.lng);
 
@@ -33,7 +34,8 @@ function normalizeProfile(row, index) {
     ["id", id],
     ["name", name],
     ["location", location],
-    ["prayer_write_up", prayerWriteUp],
+    ["about", about],
+    ["prayer_requests", prayerRequests],
   ].find(([, value]) => !value);
 
   if (missing) {
@@ -53,7 +55,8 @@ function normalizeProfile(row, index) {
     lat,
     lng,
     image: normalizeText(row.photo_url),
-    prayerWriteUp,
+    about,
+    prayerRequests,
   };
 }
 

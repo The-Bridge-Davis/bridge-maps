@@ -125,10 +125,11 @@ Profiles load from the Apps Script endpoint configured in `js/config.js`. The
 Google Sheet's `Profiles` tab uses this header row:
 
 ```text
-id,name,location,lat,lng,photo_url,prayer_write_up
+id,name,location,lat,lng,photo_url,about,prayer_requests
 ```
 
-`id`, `name`, `location`, `lat`, `lng`, and `prayer_write_up` are required.
+`id`, `name`, `location`, `lat`, `lng`, `about`, and `prayer_requests`
+are required.
 Use a unique ID and city-level coordinates for each profile; there is no
 geocoding step in the browser.
 
@@ -137,14 +138,12 @@ HTTP(S) image URL. Drive files must be shared as "anyone with the link". The
 backend converts common Drive links to thumbnail URLs, and the frontend shows
 the image as a centred square crop.
 
-The combined `prayer_write_up` cell should use this structure:
+`about` contains the profile description. Put one request per line in
+`prayer_requests`, optionally prefixed with `-`:
 
 ```text
-A short description of the person's Bridge connection.
-
-Prayer requests:
 - First request
 - Second request
 ```
 
-The frontend renders the description as text and the requests as a bullet list.
+The panel displays Prayer requests first as a bullet list, followed by About.

@@ -321,17 +321,17 @@ html, body {
   color: var(--ink-soft);
   margin-bottom: 8px;
 }
-.panel__description {
+.panel__details {
   font-family: var(--sans);
   font-size: 17px;
   line-height: 1.7;
   letter-spacing: 0.01em;
   color: var(--ink);
 }
-.panel__connection {
+.panel__about {
   white-space: pre-line;
 }
-.panel__description .panel__label {
+.panel__details .panel__label:not(:first-child) {
   margin-top: 24px;
 }
 .panel__prayer-list {

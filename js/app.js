@@ -7,7 +7,7 @@ import { loadProfiles } from "./data.js";
 const panel = document.getElementById("panel");
 const panelHeadline = document.getElementById("panel-headline");
 const panelPhoto = document.getElementById("panel-photo");
-const panelDescription = document.getElementById("panel-description");
+const panelDetails = document.getElementById("panel-details");
 const closeButton = document.getElementById("panel-close");
 const worldButton = document.getElementById("world-view-btn");
 const welcome = document.getElementById("welcome");
@@ -217,7 +217,7 @@ function openPanel(entry) {
     <span class="headline__subject">${escapeHtml(entry.name)}<span class="headline__in"> in </span>${escapeHtml(entry.location)}</span>
   `;
   renderPhoto(entry);
-  renderPrayerWriteUp(entry.prayerWriteUp);
+  renderProfileDetails(entry);
 
   panel.classList.add("is-open");
   panel.inert = false;
@@ -296,35 +296,18 @@ function renderPhotoPlaceholder(name) {
   panelPhoto.append(placeholder);
 }
 
-function renderPrayerWriteUp(value) {
-  panelDescription.replaceChildren();
-  const lines = String(value || "").split(/\r?\n/);
-  const headingIndex = lines.findIndex((line) =>
-    /^prayer requests?:\s*$/i.test(line.trim()),
-  );
-  const descriptionLines =
-    headingIndex === -1 ? lines : lines.slice(0, headingIndex);
-  const requestLines =
-    headingIndex === -1
-      ? []
-      : lines
-          .slice(headingIndex + 1)
-          .map((line) => line.trim().replace(/^[-*]\s*/, ""))
-          .filter(Boolean);
-  const description = descriptionLines.join("\n").trim();
-
-  if (description) {
-    const paragraph = document.createElement("p");
-    paragraph.className = "panel__connection";
-    paragraph.textContent = description;
-    panelDescription.append(paragraph);
-  }
+function renderProfileDetails(entry) {
+  panelDetails.replaceChildren();
+  const requestLines = String(entry.prayerRequests || "")
+    .split(/\r?\n/)
+    .map((line) => line.trim().replace(/^[-*]\s*/, ""))
+    .filter(Boolean);
 
   if (requestLines.length > 0) {
     const label = document.createElement("p");
     const list = document.createElement("ul");
     label.className = "panel__label";
-    label.textContent = "Prayer needs";
+    label.textContent = "Prayer requests";
     list.className = "panel__prayer-list";
 
     requestLines.forEach((request) => {
@@ -333,7 +316,17 @@ function renderPrayerWriteUp(value) {
       list.append(item);
     });
 
-    panelDescription.append(label, list);
+    panelDetails.append(label, list);
+  }
+
+  if (entry.about) {
+    const label = document.createElement("p");
+    const paragraph = document.createElement("p");
+    label.className = "panel__label";
+    label.textContent = "About";
+    paragraph.className = "panel__about";
+    paragraph.textContent = entry.about;
+    panelDetails.append(label, paragraph);
   }
 }
 
